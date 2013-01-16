@@ -1,5 +1,6 @@
 package togos.zoompaint;
 
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,6 +49,9 @@ public class Interpreter
 		HashMap<Object,Object> saved = new HashMap<Object,Object>();
 		BufferedReader lineReader = new BufferedReader(new InputStreamReader(System.in));
 		String line;
+		ZoomApplet app = new ZoomApplet();
+		app.setPreferredSize(new Dimension(64,64));
+		app.runWindowed();
 		while( (line = lineReader.readLine()) != null ) {
 			String[] parts = line.split("\\s+");
 			for( String p : parts ) {
@@ -69,6 +73,9 @@ public class Interpreter
 					stack.add(stack.get(stack.size()-1));
 				} else if( "set".equals(p) ) {
 					saved.put( stack.remove(stack.size()-1), stack.remove(stack.size()-1) );
+				} else if( "drop".equals(p) ) {
+					stack.remove(stack.size()-1);
+				
 				} else if( "to-image".equals(p) ) {
 					stack.add(c.getNodeImage( (Node)stack.remove(stack.size()-1) ));
 				} else if( "save-image".equals(p) ) {
@@ -81,6 +88,15 @@ public class Interpreter
 					throw new RuntimeException("Unrecognised word: "+p);
 				}
 			}
+			
+			Node topNode = null;
+			for( int i=stack.size()-1; i>=0; --i ) {
+				if( stack.get(i) instanceof Node ) {
+					topNode = (Node)stack.get(i);
+					break;
+				}
+			}
+			app.setImage(topNode == null ? null : c.getNodeImage(topNode));
 		}
 	}
 }
