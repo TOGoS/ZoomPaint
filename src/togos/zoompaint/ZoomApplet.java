@@ -15,9 +15,9 @@ public class ZoomApplet extends Applet
 	BufferedImage img = null;
 	
 	@Override public void paint( Graphics g ) {
+		g.setColor(Color.BLACK);
+		g.fillRect(0,  0, getWidth(), getHeight());
 		if( img == null ) {
-			g.setColor(Color.BLACK);
-			g.fillRect(0,  0, getWidth(), getHeight());
 			g.setColor(Color.RED);
 			g.drawString("No image", 0, 20);
 		} else {

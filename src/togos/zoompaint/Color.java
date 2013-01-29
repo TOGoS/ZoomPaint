@@ -24,4 +24,12 @@ public class Color
 			roundDiv(component(c0, 0) + component(c1, 0) + component(c2, 0) + component(c3, 0), 4)
 		);
 	}
+	
+	public static final int from4To32Bits( int v4 ) {
+		return
+			((v4 & 8) == 0 ? 0x00000000 : 0xFF000000) | 
+			((v4 & 4) == 0 ? 0x00000000 : 0x00FF0000) |
+			((v4 & 2) == 0 ? 0x00000000 : 0x0000FF00) |
+			((v4 & 1) == 0 ? 0x00000000 : 0x000000FF);
+	}
 }
