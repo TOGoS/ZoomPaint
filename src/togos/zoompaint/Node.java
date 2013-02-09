@@ -3,26 +3,43 @@ package togos.zoompaint;
 public final class Node
 {
 	public static final Object SELF = new Object();
-	public static final Node EMPTY = new Node(SELF,SELF,SELF,SELF);
+	public static final Node FULL = new Node(SELF,SELF,SELF,SELF,SELF,SELF,SELF,SELF);
 		
-	public final Node n0, n1, n2, n3;
+	private final Node[] subNodes = new Node[8];
+	
 	// Hold precalculated functions of the node for supposed efficiency:
-	public final int color, opCode;
+	public final boolean isSelfColored;
+	public final int[] colorCycle;
+	public final byte v8;
+	public final long v64;
 	
-	protected int v1(Node n) {
-		return n == this ? 0 : 1;
+	protected static int v1(Node p, Node n) {
+		return n == p ? 1 : 0;
 	}
 	
-	protected int v4() {
-		return (v1(n0)<< 3) | (v1(n1)<<2) | (v1(n2)<<1) | (v1(n3)<<0);
+	protected static byte v8(Node n) {
+		return (byte)(
+			(v1(n, n.subNodes[0]) << 7) |
+			(v1(n, n.subNodes[1]) << 6) |
+			(v1(n, n.subNodes[2]) << 5) |
+			(v1(n, n.subNodes[3]) << 4) |
+			(v1(n, n.subNodes[4]) << 3) |
+			(v1(n, n.subNodes[5]) << 2) |
+			(v1(n, n.subNodes[6]) << 1) |
+			(v1(n, n.subNodes[7]) << 0)
+		);
 	}
 	
-	protected int v16() {
-		return (n0.v4()<<12) | (n1.v4()<<8) | (n2.v4()<<4) | (n3.v4()<<0);
-	}
-	
-	protected boolean isOpNode() {
-		return n0 == this;
+	protected static long v64(Node n) {
+		return
+			((long)v8(n.subNodes[0]) << 56) |
+			((long)v8(n.subNodes[1]) << 48) |
+			((long)v8(n.subNodes[2]) << 40) |
+			((long)v8(n.subNodes[3]) << 32) |
+			((long)v8(n.subNodes[4]) << 24) |
+			((long)v8(n.subNodes[5]) << 16) |
+			((long)v8(n.subNodes[6]) <<  8) |
+			((long)v8(n.subNodes[7]) <<  0);
 	}
 	
 	/*
@@ -31,11 +48,21 @@ public final class Node
 	 * 0x00000001 - use color of n2, function of n3
 	 */
 	
-	protected static int calculateColor( Node n ) {
-		if( n.isOpNode() ) {
-			return Color.from4To32Bits(n.n2.v4());
-		} else {
-			return Color.average( n.n0.color, n.n1.color, n.n2.color, n.n3.color );
+	protected static int[] calculateColorCycle( Node n ) {
+		switch( ((n.v8>>4) & 0x0F) ) {
+		case 1:
+			// Solid color defined by bottom 4 numbers
+			return Color.cycle( n.v8&0xF );
+		default:
+			return Color.average(
+				Color.average(
+					Color.average( n.subNodes[0].colorCycle, n.subNodes[1].colorCycle ),
+					Color.average( n.subNodes[2].colorCycle, n.subNodes[3].colorCycle )
+				), Color.average(
+					Color.average( n.subNodes[4].colorCycle, n.subNodes[5].colorCycle ),
+					Color.average( n.subNodes[6].colorCycle, n.subNodes[7].colorCycle )
+				)
+			);
 		}
 	}
 	
@@ -45,12 +72,20 @@ public final class Node
 		throw new RuntimeException("Invalid node argument: "+o.getClass());
 	}
 	
-	public Node( Object n0, Object n1, Object n2, Object n3 ) {
-		this.n0 = parseSubNode(n0);
-		this.n1 = parseSubNode(n1);
-		this.n2 = parseSubNode(n2);
-		this.n3 = parseSubNode(n3);
-		this.color = calculateColor(this);
-		this.opCode = this.n1.v16();
+	public Node( Object[] subNodeParams ) {
+		assert subNodeParams.length == 8;
+		for( int i=0; i<8; ++i ) {
+			this.subNodes[i] = parseSubNode(subNodeParams[i]);
+		}
+		this.v8  =  v8(this);
+		this.v64 = v64(this);
+		this.isSelfColored = v8 != 0;
+		this.colorCycle    = calculateColorCycle(this);
 	}
+	
+	public Node( Object o0, Object o1, Object o2, Object o3, Object o4, Object o5, Object o6, Object o7 ) {
+		this( new Object[]{o0,o1,o2,o3,o4,o5,o6,o7} );
+	}
+	
+	public Node subNode(int idx) { return subNodes[idx]; }
 }

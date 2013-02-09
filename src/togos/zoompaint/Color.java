@@ -16,14 +16,16 @@ public class Color
 		return (int)Math.round((double)num / den);
 	}
 	
-	public static final int average( int c0, int c1, int c2, int c3 ) {
-		return color(
-			roundDiv(component(c0,24) + component(c1,24) + component(c2,24) + component(c3,24), 4), 
-			roundDiv(component(c0,16) + component(c1,16) + component(c2,16) + component(c3,16), 4),
-			roundDiv(component(c0, 8) + component(c1, 8) + component(c2, 8) + component(c3, 8), 4),
-			roundDiv(component(c0, 0) + component(c1, 0) + component(c2, 0) + component(c3, 0), 4)
+	public static final int average( int c0, int c1 ) {
+		return c0 == c1 ? c0 : color(
+			roundDiv(component(c0,24) + component(c1,24), 4), 
+			roundDiv(component(c0,16) + component(c1,16), 4),
+			roundDiv(component(c0, 8) + component(c1, 8), 4),
+			roundDiv(component(c0, 0) + component(c1, 0), 4)
 		);
 	}
+
+	// Might want overlay function from TMCMR
 	
 	public static final int from4To32Bits( int v4 ) {
 		return
@@ -31,5 +33,23 @@ public class Color
 			((v4 & 4) == 0 ? 0x00000000 : 0x00FF0000) |
 			((v4 & 2) == 0 ? 0x00000000 : 0x0000FF00) |
 			((v4 & 1) == 0 ? 0x00000000 : 0x000000FF);
+	}
+	
+	//// Cycle stuff
+	
+	static int CYCLE_LENGTH = 32;
+	
+	public static final int[] average( int[] c0, int[] c1 ) {
+		int[] res = new int[Math.min(c0.length,c1.length)];
+		for( int i=0; i<res.length; ++i ) {
+			res[i] = average(c0[i],c1[i]);
+		}
+		return res;
+	}
+	
+	public static final int[] cycle( int color ) {
+		int[] cycle = new int[CYCLE_LENGTH];
+		for( int i=0; i<cycle.length; ++i ) cycle[i] = color;
+		return cycle;
 	}
 }
